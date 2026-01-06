@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-3 no-print">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2 class="h4">Student Analysis Detail</h2>
+        <button onclick="window.print()" class="btn btn-secondary">
+            <i class="bi bi-printer"></i> Print Report / Save PDF
+        </button>
+    </div>
+</div>
+
+<div class="row printable-area">
+    <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Student Profile</h5>
+            </div>
+            <div class="card-body">
+                <h4 class="card-title">{{ student.name }}</h4>
+                <p class="text-muted mb-1">{{ student.email }}</p>
+                <hr>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <span>Current Status:</span>
+                    <span class="badge 
+                        {% if student.performance_category == 'High' %}bg-success
+                        {% elif student.performance_category == 'Medium' %}bg-warning text-dark
+                        {% else %}bg-danger{% endif %} rounded-pill px-3 py-2">
+                        {{ student.performance_category }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">Key Insights</h6>
+            </div>
+            <div class="card-body">
+                <h6>Strengths</h6>
+                <div class="mb-3">
+                    {% for strength in analysis.strengths %}
+                    <span class="badge bg-success-subtle text-success-emphasis me-1 mb-1">{{ strength }}</span>
+                    {% else %}
+                    <small class="text-muted">Not enough data to determine specific strengths.</small>
+                    {% endfor %}
+                </div>
+
+                <h6>Areas for Improvement</h6>
+                <div>
+                    {% for weakness in analysis.weaknesses %}
+                    <span class="badge bg-danger-subtle text-danger-emphasis me-1 mb-1">{{ weakness }}</span>
+                    {% else %}
+                    <small class="text-muted">No critical weaknesses flagged.</small>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <!-- Progress Chart -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Performance Trend</h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Recommended Action Plan</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for course in recommendations %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-journal-bookmark me-2 text-primary"></i>
+                            {{ course }}
+                        </div>
+                        <span class="badge bg-primary rounded-pill">Priority</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted">No specific recommendations at this time.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row printable-area">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Detailed Attempt History</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Attempt #</th>
+                                <th>Date/Order</th>
+                                <th>Course Name</th>
+                                <th>Score Achieved</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in attempts %}
+                            <tr>
+                                <td><span class="badge bg-secondary rounded-circle">{{ attempt.attempt }}</span></td>
+                                <td>{{ attempt.timestamp if attempt.timestamp else 'Batch Upload' }}</td>
+                                <td>{{ attempt.course_name }}</td>
+                                <td>
+                                    <span class="fw-bold 
+                                        {% if attempt.score|int >= 80 %}text-success
+                                        {% elif attempt.score|int >= 60 %}text-warning
+                                        {% else %}text-danger{% endif %}">
+                                        {{ attempt.score }}
+                                    </span>
+                                </td>
+                                <td>{{ attempt.grade if attempt.grade else 'N/A' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No detailed attempt history
+                                    available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .printable-area,
+        .printable-area * {
+            visibility: visible;
+        }
+
+        .printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Safe Data Injection
+        // Safe Data Injection
+        const attemptsData = {{ attempts | tojson | safe
+    }};
+
+    const attemptLabels = attemptsData.map(a => "Attempt " + a.attempt);
+    const attemptScores = attemptsData.map(a => a.score);
+
+    // Render Chart
+    if (attemptScores.length > 0) {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: attemptLabels,
+                datasets: [{
+                    label: 'Performance Score',
+                    data: attemptScores,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#0d6efd',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                }
+            }
+        });
+    }
+    });
+</script>
+{% endblock %}

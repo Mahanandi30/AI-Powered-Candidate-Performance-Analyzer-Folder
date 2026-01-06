@@ -1,0 +1,8 @@
+pandas
+numpy
+openpyxl
+Flask
+Flask-SQLAlchemy
+scikit-learn
+Flask-Login
+

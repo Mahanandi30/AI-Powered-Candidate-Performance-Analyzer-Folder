@@ -1,0 +1,89 @@
+{% extends "dashboard_layout.html" %}
+
+{% block page_title %}Add New Student{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card dashboard-card bg-white">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-person-plus-fill me-2"></i>Add Student Record
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_student') }}">
+                        <div class="row g-3">
+                            <!-- Personal Info -->
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required
+                                    placeholder="e.g. John Doe">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" required
+                                    placeholder="e.g. john@college.edu">
+                            </div>
+
+                            <!-- Course Info -->
+                            <div class="col-md-6">
+                                <label for="course_name" class="form-label">Course Name</label>
+                                <select class="form-select" id="course_name" name="course_name" required>
+                                    <option value="" selected disabled>Select Course...</option>
+                                    <!-- Options could be dynamic in future, hardcoded common ones for now -->
+                                    <option value="Python Fundamentals">Python Fundamentals</option>
+                                    <option value="Java Programming">Java Programming</option>
+                                    <option value="Data Science 101">Data Science 101</option>
+                                    <option value="Web Development">Web Development</option>
+                                    <option value="Database Systems">Database Systems</option>
+                                    <option value="Networking">Networking</option>
+                                    <option value="Cyber Security">Cyber Security</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="score" class="form-label">Score (0-100)</label>
+                                <input type="number" class="form-control" id="score" name="score" min="0" max="100"
+                                    required>
+                            </div>
+
+                            <!-- Additional Info -->
+                            <div class="col-md-6">
+                                <label for="attempt_timestamp" class="form-label">Date of Attempt</label>
+                                <input type="datetime-local" class="form-control" id="attempt_timestamp"
+                                    name="attempt_timestamp" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="topic_tags" class="form-label">Topic Tags (Comma separated)</label>
+                                <input type="text" class="form-control" id="topic_tags" name="topic_tags"
+                                    placeholder="e.g. loops, arrays, oop">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="feedback" class="form-label">Instructor Feedback</label>
+                                <textarea class="form-control" id="feedback" name="feedback" rows="3"
+                                    placeholder="Enter specific feedback for this attempt..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-light border">Cancel</a>
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save
+                                Record</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set default date to now
+    document.addEventListener('DOMContentLoaded', function () {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('attempt_timestamp').value = now.toISOString().slice(0, 16);
+    });
+</script>
+{% endblock %}

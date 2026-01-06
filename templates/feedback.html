@@ -1,0 +1,188 @@
+{% extends "dashboard_layout.html" %}
+
+{% block page_title %}Candidate Feedback Logs{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-1 text-primary fw-bold">Detailed Feedback Repository</h4>
+            <p class="text-muted small mb-0">Hover over a course code to view specific feedback logs.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <input type="text" id="globalFeedbackSearch" class="form-control" placeholder="Search candidate...">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Course Buttons Navigation -->
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <button class="btn btn-primary course-btn active" data-target="all">All Courses</button>
+    {% if feedback_by_course %}
+    {% for course in feedback_by_course.keys() %}
+    {% if course != 'General' %}
+    <button class="btn btn-outline-secondary course-button" data-target="course-{{ loop.index }}">
+        {{ course }}
+    </button>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+</div>
+
+<!-- Feedback Content Sections -->
+<div id="feedback-container">
+    {% if feedback_by_course %}
+    <!-- Loop for each course section -->
+    {% for course, students in feedback_by_course.items() %}
+    <div class="card bg-white shadow-sm mb-4 feedback-section" id="course-{{ loop.index }}"
+        data-course-name="{{ course }}">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="mb-0 fw-bold text-dark">
+                <i class="bi bi-journal-text text-primary me-2"></i> {{ course }} Feedback
+                <span class="badge bg-secondary-subtle text-dark rounded-pill fs-6 ms-2">{{ students|length }}
+                    Logs</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4" style="width: 25%;">Candidate</th>
+                            <th style="width: 20%;">Email</th>
+                            <th style="width: 55%;">Instructor Comments / Generated Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr class="search-row">
+                            <td class="ps-4 fw-bold text-dark search-name">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar bg-light text-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                        style="width: 35px; height: 35px;">
+                                        {{ student.name[0] }}
+                                    </div>
+                                    <a href="{{ url_for('student_analysis', email=student.email) }}"
+                                        class="text-decoration-none text-dark">{{ student.name }}</a>
+                                </div>
+                            </td>
+                            <td class="text-muted small search-email">{{ student.email }}</td>
+                            <td class="small">
+                                {% if student.feedback %}
+                                {% if '\n' in student.feedback or '- ' in student.feedback %}
+                                <ul class="list-group list-group-flush border-0">
+                                    {% for line in student.feedback.split('\n') %}
+                                    {% if line.strip() %}
+                                    <li class="list-group-item border-0 p-1 bg-transparent d-flex text-muted">
+                                        <i class="bi bi-dot text-primary me-2 fs-5" style="margin-top: -5px;"></i>
+                                        {{ line.replace('- ', '').strip() }}
+                                    </li>
+                                    {% endif %}
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <div class="p-2 text-muted">{{ student.feedback }}</div>
+                                {% endif %}
+                                {% else %}
+                                <em class="text-muted opacity-50">No detailed feedback recorded.</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="alert alert-info">No feedback data available. Please upload candidate analysis.</div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const buttons = document.querySelectorAll('.course-button');
+        const allBtn = document.querySelector('.course-btn[data-target="all"]');
+        const sections = document.querySelectorAll('.feedback-section');
+        const searchInput = document.getElementById('globalFeedbackSearch');
+
+        // Hover / Click functionality for buttons
+        buttons.forEach(btn => {
+            // On Click (Persistent)
+            btn.addEventListener('click', function () {
+                // Reset active states
+                buttons.forEach(b => b.classList.remove('btn-primary', 'active'));
+                buttons.forEach(b => b.classList.add('btn-outline-secondary'));
+                allBtn.classList.remove('btn-primary', 'active');
+                allBtn.classList.add('btn-outline-secondary');
+
+                // Set active
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-primary', 'active');
+
+                // Show specific section
+                const target = this.getAttribute('data-target');
+                sections.forEach(sec => {
+                    if (sec.id === target) {
+                        sec.style.display = 'block';
+                    } else {
+                        sec.style.display = 'none';
+                    }
+                });
+            });
+
+            // On Hover (Preview) - Optional behavior, user asked for "Hover on course code"
+            // We can treat hover as a temporary peek, but good UX usually requires clicking for stability.
+            btn.addEventListener('mouseenter', function () {
+                // Mimic click behavior on hover as per request
+                this.click();
+            });
+        });
+
+        // "All Courses" Button
+        allBtn.addEventListener('click', function () {
+            buttons.forEach(b => b.classList.remove('btn-primary', 'active'));
+            buttons.forEach(b => b.classList.add('btn-outline-secondary'));
+
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('btn-primary', 'active');
+
+            sections.forEach(sec => sec.style.display = 'block');
+        });
+
+        // Initial State: Show all or specific? Default All.
+
+        // Search Functionality
+        searchInput.addEventListener('keyup', function (e) {
+            const term = e.target.value.toLowerCase();
+
+            sections.forEach(section => {
+                // If section is currently visible (or force check for global search)
+                const rows = section.querySelectorAll('.search-row');
+                let hasVisibleRows = false;
+
+                rows.forEach(row => {
+                    const name = row.querySelector('.search-name').textContent.toLowerCase();
+                    const email = row.querySelector('.search-email').textContent.toLowerCase();
+                    if (name.includes(term) || email.includes(term)) {
+                        row.style.display = '';
+                        hasVisibleRows = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // If searching, show section only if it has matches
+                if (term.length > 0) {
+                    if (hasVisibleRows) section.style.display = 'block';
+                    else section.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

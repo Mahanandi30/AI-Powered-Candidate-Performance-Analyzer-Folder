@@ -1,0 +1,146 @@
+{% extends "dashboard_layout.html" %}
+
+{% block page_title %}Mentor Pairings Map{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-1 text-primary fw-bold">Mentorship Alignments</h4>
+            <p class="text-muted small mb-0">Manage and review mentor-mentee assignments by course module.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <input type="text" id="pairingSearch" class="form-control" placeholder="Search across all courses...">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if pairings_by_course %}
+{% for course_name, pairs in pairings_by_course.items() %}
+<div class="card bg-white shadow-sm mb-4 course-section">
+    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+        <h5 class="mb-0 fw-bold text-dark">
+            <i class="bi bi-journal-bookmark-fill text-primary me-2"></i> {{ course_name }}
+            <span class="badge bg-primary-subtle text-primary rounded-pill fs-6 ms-2">{{ pairs|length }} Pairs</span>
+        </h5>
+        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapse-{{ loop.index }}">
+            <i class="bi bi-chevron-down"></i>
+        </button>
+    </div>
+    <div id="collapse-{{ loop.index }}" class="collapse show">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4" style="width: 40%;">Mentor (Guide)</th>
+                            <th style="width: 40%;">Mentee (Student)</th>
+                            <th class="text-center">Compatibility</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pair in pairs %}
+                        <tr class="search-row">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar bg-success-subtle text-success rounded-circle me-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                        style="width: 45px; height: 45px;">
+                                        <span class="fw-bold">{{ pair.mentor_name[0] }}</span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark search-mentor">{{ pair.mentor_name }}</div>
+                                        <div class="small text-muted">{{ pair.mentor_email }}</div>
+                                        <span
+                                            class="badge bg-success-subtle text-success border border-success-subtle mt-1"
+                                            style="font-size: 0.7rem;">Top Performer</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar bg-danger-subtle text-danger rounded-circle me-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                        style="width: 45px; height: 45px;">
+                                        <span class="fw-bold">{{ pair.mentee_name[0] }}</span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark search-mentee">{{ pair.mentee_name }}</div>
+                                        <div class="small text-muted">{{ pair.mentee_email }}</div>
+                                        <span
+                                            class="badge bg-danger-subtle text-danger border border-danger-subtle mt-1"
+                                            style="font-size: 0.7rem;">Needs Support</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="progress w-75" style="height: 6px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 92%"
+                                            aria-valuenow="92" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-success fw-bold mt-1">92% Match</small>
+                                </div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-secondary" title="View Details"><i
+                                        class="bi bi-three-dots"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-3">
+        <i class="bi bi-people display-1 text-muted opacity-25"></i>
+    </div>
+    <h4 class="text-muted">No mentorship pairings found.</h4>
+    <p class="text-muted">Run the analysis engine to generate new matches.</p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary mt-2">Go to Dashboard</a>
+</div>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('pairingSearch');
+        const courseSections = document.querySelectorAll('.course-section');
+
+        searchInput.addEventListener('keyup', function (e) {
+            const term = e.target.value.toLowerCase();
+
+            courseSections.forEach(section => {
+                const rows = section.querySelectorAll('.search-row');
+                let hasVisibleRows = false;
+
+                rows.forEach(row => {
+                    const mentor = row.querySelector('.search-mentor').textContent.toLowerCase();
+                    const mentee = row.querySelector('.search-mentee').textContent.toLowerCase();
+
+                    if (mentor.includes(term) || mentee.includes(term)) {
+                        row.style.display = '';
+                        hasVisibleRows = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Helper: Hide the whole course card if no matches found in it
+                if (hasVisibleRows) {
+                    section.style.display = '';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,421 @@
+{% extends "dashboard_layout.html" %}
+
+{% block page_title %}Overview{% endblock %}
+
+{% block content %}
+<!-- SECTION 1: SUMMARY STATISTICS CARDS -->
+<div class="row g-4 mb-4">
+    <!-- Card 1: Total Students -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card dashboard-card bg-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success small">
+                        <i class="bi bi-arrow-up-short"></i> Active
+                    </span>
+                </div>
+                <h2 class="mb-0 fw-bold">{{ students|length }}</h2>
+                <div class="text-muted small text-uppercase fw-semibold mt-1">Registered Candidates</div>
+                <div class="mt-3 small text-muted">
+                    <span class="text-success fw-bold"><i class="bi bi-graph-up"></i> +5%</span> vs last month
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Performance Distribution -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card dashboard-card bg-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="icon-box bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-pie-chart-fill"></i>
+                    </div>
+                </div>
+                <h6 class="text-muted small text-uppercase fw-semibold">Class Performance</h6>
+                <div class="d-flex align-items-end justify-content-between mt-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-success p-1 rounded-circle" style="width: 8px; height: 8px;"></span>
+                            <span class="small fw-bold">High: {{ high_performers }}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-warning p-1 rounded-circle" style="width: 8px; height: 8px;"></span>
+                            <span class="small fw-bold">Med: {{ medium_performers }}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-danger p-1 rounded-circle" style="width: 8px; height: 8px;"></span>
+                            <span class="small fw-bold">Poor: {{ poor_performers }}</span>
+                        </div>
+                    </div>
+                    <div style="width: 60px; height: 60px;">
+                        <canvas id="miniPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: Recent Activity -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card dashboard-card bg-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-stopwatch-fill"></i>
+                    </div>
+                    <span class="badge bg-success small">System Active</span>
+                </div>
+                <h6 class="text-muted small text-uppercase fw-semibold">Recent Activity</h6>
+                <div class="d-flex flex-column gap-2 mt-2">
+                    <div class="small"><i class="bi bi-file-earmark-arrow-up text-primary"></i> Data Uploaded <span
+                            class="text-muted ms-1">Recently</span></div>
+                    <div class="small"><i class="bi bi-people text-success"></i> <strong>{{ pairings|length or 0
+                            }}</strong> Pairs Created</div>
+                    <div class="small"><i class="bi bi-check2-all text-info"></i> Analysis Complete</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 4: Improvement Rate -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card dashboard-card bg-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="icon-box bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                </div>
+                <h2 class="mb-0 fw-bold">42%</h2>
+                <div class="text-muted small text-uppercase fw-semibold mt-1">Improvement Rate</div>
+                <div class="progress mt-3" style="height: 6px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 42%" aria-valuenow="42"
+                        aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="mt-2 small text-muted">
+                    <span class="text-success fw-bold">+12%</span> from last quarter
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 2: KEY PERFORMANCE INDICATORS (KPIs) -->
+<div class="row g-4 mb-4" id="performance-section">
+    <!-- Class Performance Overview -->
+    <div class="col-lg-8">
+        <div class="card dashboard-card bg-white h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h6 class="mb-0 fw-bold text-primary">Class Performance Overview</h6>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light border dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown">Last Month</button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Last Month</a></li>
+                        <li><a class="dropdown-item" href="#">Last Quarter</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="height: 350px;">
+                    <canvas id="averageScoreChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Trends -->
+    <div class="col-lg-4">
+        <div class="card dashboard-card bg-white h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold text-primary">Composition</h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <div style="height: 250px; width: 100%;">
+                    <canvas id="mainPerformanceChart"></canvas>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-top-0 text-center pb-4">
+                <small class="text-muted">Total Student Distribution</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 3: TOP/BOTTOM PERFORMERS -->
+<div class="row g-4 mb-4" id="student-management">
+    <!-- Top 5 Performers -->
+    <div class="col-lg-6">
+        <div class="card dashboard-card bg-white h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h6 class="mb-0 fw-bold text-success"><i class="bi bi-trophy-fill me-2"></i>Top 5 Performers</h6>
+                <span class="badge bg-success-subtle text-success">Honor Roll</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-3 border-0">Rank</th>
+                                <th class="border-0">Candidate</th>
+                                <th class="border-0">Score</th>
+                                <th class="border-0 text-end pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in top_performers %}
+                            <tr>
+                                <td class="ps-3 fw-bold text-muted">#{{ loop.index }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle small d-flex align-items-center justify-content-center me-2"
+                                            style="width: 32px; height: 32px;">
+                                            {{ student.name[0] }}
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('student_analysis', email=student.email) }}"
+                                                class="text-dark text-decoration-none fw-bold small">{{ student.name
+                                                }}</a>
+                                            <div class="text-muted" style="font-size: 0.75rem;">{{ student.course_name
+                                                }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="badge bg-success">{{ student.best_score }}</span>
+                                        {% if student.std_score %}
+                                        <small class="text-muted" style="font-size: 0.65rem;"
+                                            title="Volatility/Consistency">
+                                            ±{{ "%.1f"|format(student.std_score|float) }}
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-end pe-3">
+                                <td class="text-end pe-3">
+                                    <a href="{{ url_for('edit_student', email=student.email) }}"
+                                        class="btn btn-sm btn-outline-secondary py-0"
+                                        style="font-size: 0.75rem;">Edit</a>
+                                </td>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom 5 Need Attention -->
+    <div class="col-lg-6">
+        <div class="card dashboard-card bg-white h-100 border-danger border-start border-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Needs Attention
+                    (Bottom 5)</h6>
+                <span class="badge bg-danger-subtle text-danger">Critical</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-3 border-0">Candidate</th>
+                                <th class="border-0">Course</th>
+                                <th class="border-0">Score</th>
+                                <th class="border-0 text-end pe-3">Quick Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in bottom_performers %}
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="d-flex align-items-center">
+                                        <!-- Warning dot if really low -->
+                                        {% if student.best_score < 40 %} <span
+                                            class="position-absolute p-1 bg-danger border border-light rounded-circle"
+                                            style="margin-left: -5px; margin-top: -5px;"></span>
+                                            {% endif %}
+                                            <a href="{{ url_for('student_analysis', email=student.email) }}"
+                                                class="text-dark text-decoration-none fw-bold small">{{ student.name
+                                                }}</a>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">{{ student.email }}</div>
+                                </td>
+                                <td class="small">{{ student.course_name }}</td>
+                                <td><span class="badge bg-danger text-white">{{ student.best_score }}</span></td>
+                                <td class="text-end pe-3">
+                                    <a href="{{ url_for('student_analysis', email=student.email) }}"
+                                        class="btn btn-sm btn-light text-muted py-0" title="View"><i
+                                            class="bi bi-eye"></i></a>
+                                    <a href="{{ url_for('edit_student', email=student.email) }}"
+                                        class="btn btn-sm btn-light text-primary py-0" title="Edit"><i
+                                            class="bi bi-pencil"></i></a>
+                                    <form action="{{ url_for('delete_student', email=student.email) }}" method="POST"
+                                        class="d-inline" onsubmit="return confirm('Remove student?');">
+                                        <button class="btn btn-sm btn-light text-danger py-0" title="Delete"><i
+                                                class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 4: COURSE ANALYTICS GRID -->
+<div class="row g-4 mb-4" id="recommendations">
+    <div class="col-12">
+        <div class="card dashboard-card bg-white">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold text-primary">Subject-wise Performance Grid</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-start ps-4">Course</th>
+                                <th>Avg Score</th>
+                                <th>Pass Rate</th>
+                                <th>Difficulty</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in course_analytics %}
+                            <tr>
+                                <td class="text-start ps-4 fw-bold">{{ course.name }}</td>
+                                <td>
+                                    <span
+                                        class="fw-bold {% if course.avg_score >= 80 %}text-success{% elif course.avg_score >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ course.avg_score }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <div class="progress" style="width: 60px; height: 6px; margin-right: 8px;">
+                                            <div class="progress-bar {% if course.pass_rate >= 80 %}bg-success{% else %}bg-warning{% endif %}"
+                                                role="progressbar" style="width: {{ course.pass_rate }}%"></div>
+                                        </div>
+                                        <span class="small text-muted">{{ course.pass_rate }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge rounded-pill {% if course.difficulty == 'Low' %}bg-success-subtle text-success border border-success{% elif course.difficulty == 'Medium' %}bg-warning-subtle text-warning border border-warning{% else %}bg-danger-subtle text-danger border border-danger{% endif %} pl-3 pr-3">
+                                        {{ course.difficulty }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if course.avg_score >= 75 %}
+                                    <span class="badge bg-light text-success border"><i
+                                            class="bi bi-check-circle me-1"></i>Good</span>
+                                    {% elif course.avg_score >= 60 %}
+                                    <span class="badge bg-light text-warning border"><i
+                                            class="bi bi-exclamation-circle me-1"></i>Review</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-danger border"><i
+                                            class="bi bi-exclamation-triangle me-1"></i>Critical</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Data for Charts
+        const highCount = Number("{{ high_performers|default(0) }}");
+        const medCount = Number("{{ medium_performers|default(0) }}");
+        const poorCount = Number("{{ poor_performers|default(0) }}");
+
+        const courseLabels = Object.keys({{ avg_score_course| tojson | safe }});
+    const courseScores = Object.values({{ avg_score_course| tojson | safe }});
+
+    // 1. Mini Performance Donut (Card 2)
+    const ctxMini = document.getElementById('miniPerformanceChart').getContext('2d');
+    new Chart(ctxMini, {
+        type: 'doughnut',
+        data: {
+            labels: ['High', 'Med', 'Poor'],
+            datasets: [{
+                data: [highCount, medCount, poorCount],
+                backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }
+        }
+    });
+
+    // 2. Average Score Bar Chart (Main Section)
+    const ctxAvg = document.getElementById('averageScoreChart').getContext('2d');
+    new Chart(ctxAvg, {
+        type: 'bar', // Visualizing Course Averages
+        data: {
+            labels: courseLabels,
+            datasets: [{
+                label: 'Average Score',
+                data: courseScores,
+                backgroundColor: '#3498db',
+                borderRadius: 4,
+                barThickness: 30
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, max: 100, grid: { borderDash: [2, 4] } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 3. Main Composition Chart (KPI Section)
+    const ctxMainDist = document.getElementById('mainPerformanceChart').getContext('2d');
+    new Chart(ctxMainDist, {
+        type: 'doughnut',
+        data: {
+            labels: ['High Performers', 'Medium Performers', 'Poor Performers'],
+            datasets: [{
+                data: [highCount, medCount, poorCount],
+                backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } }
+            }
+        }
+    });
+    });
+</script>
+{% endblock %}
