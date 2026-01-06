@@ -1,42 +1,40 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
-venv/
+*.pyo
+*.pyd
 env/
-ENV/
-.env
+venv/
+.venv/
+pip-wheel-metadata/
+*.egg-info/
 
-# IDEs
-.vscode/
-.idea/
-
-# Database
-*.db
+# Byte-compiled / caches
+*.pyc
+*.pyo
+*.pyd
 *.sqlite3
 
-# Logs
-*.log
+# Jupyter
+.ipynb_checkpoints/
 
-# OS
+# Environment / secrets
+.env
+instance/
+config/*.secret
+
+# Logs, OS, editors
+*.log
 .DS_Store
-Thumbs.db
+.vscode/
+
+# Test / caches
+.pytest_cache/
+
+# Build / distribution
+build/
+dist/
+
+# Uploads / datasets (optional - can keep if you want)
+uploads/
+uploads_test/
