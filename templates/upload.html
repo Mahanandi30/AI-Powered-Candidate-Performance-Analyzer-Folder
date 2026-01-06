@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Data - AI-Powered Candidate Performance Analyzer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Upload Student Performance Data</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Upload CSV or Excel File</h5>
+                <p class="card-text">Upload your student performance data in CSV or Excel format. The file should contain the following columns:</p>
+                
+                <ul>
+                    <li><strong>student_id</strong> - Unique identifier for each student</li>
+                    <li><strong>name</strong> - Student's full name</li>
+                    <li><strong>email</strong> - Student's email address</li>
+                    <li><strong>course_id</strong> - Unique identifier for each course</li>
+                    <li><strong>course_name</strong> - Name of the course</li>
+                    <li><strong>attempt_id</strong> - Attempt number for the course</li>
+                    <li><strong>attempt_timestamp</strong> - Date/time of the attempt</li>
+                    <li><strong>score</strong> - Score achieved by the student</li>
+                    <li><strong>max_score</strong> - Maximum possible score</li>
+                    <li><strong>grade</strong> - Grade received (A, B, C, D, F)</li>
+                    <li><strong>topic_tags</strong> - Comma-separated tags for topics covered</li>
+                </ul>
+                
+                <form id="upload-form" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv,.xlsx,.xls" required>
+                        <div class="form-text">Supported formats: CSV, XLS, XLSX</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="upload-btn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" id="upload-spinner"></span>
+                        <span id="upload-text">Upload Data</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Sample Data</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Download a sample CSV file to see the expected format:</p>
+                <a href="#" class="btn btn-outline-primary">Download Sample CSV</a>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Uploads</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">No recent uploads</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info d-none" id="upload-result">
+            <h6 id="result-title"></h6>
+            <p id="result-message"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('upload-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadSpinner = document.getElementById('upload-spinner');
+        const uploadText = document.getElementById('upload-text');
+        const resultDiv = document.getElementById('upload-result');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        
+        // Show loading state
+        uploadSpinner.classList.remove('d-none');
+        uploadText.textContent = 'Uploading...';
+        uploadBtn.disabled = true;
+        resultDiv.classList.add('d-none');
+        
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            uploadSpinner.classList.add('d-none');
+            uploadText.textContent = 'Upload Data';
+            uploadBtn.disabled = false;
+            
+            if (data.success) {
+                resultDiv.className = 'alert alert-success';
+                resultTitle.textContent = 'Success!';
+                resultMessage.textContent = data.message;
+            } else {
+                resultDiv.className = 'alert alert-danger';
+                resultTitle.textContent = 'Error!';
+                resultMessage.textContent = data.error;
+            }
+            
+            resultDiv.classList.remove('d-none');
+        })
+        .catch(error => {
+            uploadSpinner.classList.add('d-none');
+            uploadText.textContent = 'Upload Data';
+            uploadBtn.disabled = false;
+            
+            resultDiv.className = 'alert alert-danger';
+            resultTitle.textContent = 'Error!';
+            resultMessage.textContent = 'An error occurred while uploading the file.';
+            resultDiv.classList.remove('d-none');
+        });
+    });
+</script>
+{% endblock %}

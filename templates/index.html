@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron bg-primary text-white p-5 rounded">
+    <div class="container">
+        <h1 class="display-4"><i class="fas fa-graduation-cap"></i> AI-Powered Candidate Performance Analyzer</h1>
+        <p class="lead">An intelligent system to analyze student performance, identify strengths and weaknesses, recommend courses, and pair students with mentors.</p>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Performance Analysis</h5>
+                <p class="card-text">Identify student strengths and weaknesses across different subjects with AI-powered insights.</p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">View Dashboard</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-book-open fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Course Recommendations</h5>
+                <p class="card-text">Get personalized course recommendations based on individual performance gaps.</p>
+                <a href="{{ url_for('recommendations') }}" class="btn btn-success">View Recommendations</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-users fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Mentor Pairings</h5>
+                <p class="card-text">Automatically pair weak performers with high achievers for peer learning.</p>
+                <a href="{{ url_for('pairings') }}" class="btn btn-info">View Pairings</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>Quick Stats</h3>
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3 id="total-students">0</h3>
+                        <p class="card-text">Total Students</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3 id="total-courses">0</h3>
+                        <p class="card-text">Courses</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3 id="high-performers">0</h3>
+                        <p class="card-text">High Performers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3 id="improvement-rate">0%</h3>
+                        <p class="card-text">Avg. Improvement</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fetch analytics data and update stats
+    fetch('/api/analytics')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-students').textContent = data.total_students;
+            document.getElementById('total-courses').textContent = data.total_courses;
+            
+            // Calculate high performers
+            let highPerformerCount = 0;
+            data.performance_distribution.forEach(item => {
+                if (item.performance_level === 'High') {
+                    highPerformerCount = item.count;
+                }
+            });
+            document.getElementById('high-performers').textContent = highPerformerCount;
+            
+            // Calculate average improvement (this would come from your improvement tracking)
+            document.getElementById('improvement-rate').textContent = '0%'; // Placeholder
+        })
+        .catch(error => console.error('Error fetching analytics:', error));
+</script>
+{% endblock %}

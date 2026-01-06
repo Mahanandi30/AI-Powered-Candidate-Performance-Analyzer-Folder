@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - AI-Powered Candidate Performance Analyzer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Reports</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Generate Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-user-graduate"></i> Individual Student Report</h5>
+                                <p class="card-text">Generate detailed performance report for a specific student.</p>
+                                <div class="form-group mb-3">
+                                    <label for="studentSelect">Select Student:</label>
+                                    <select class="form-control" id="studentSelect">
+                                        <option value="">-- Select a student --</option>
+                                        {% for student in students %}
+                                        <option value="{{ student.student_id }}">{{ student.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="generateStudentReport()">Generate Report</button>
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('student', 'pdf')">PDF</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('student', 'excel')">Excel</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('student', 'csv')">CSV</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-users"></i> Class Performance Summary</h5>
+                                <p class="card-text">Generate overall class performance report with statistics and visualizations.</p>
+                                <button class="btn btn-primary" onclick="generateClassReport()">Generate Report</button>
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('class', 'pdf')">PDF</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('class', 'excel')">Excel</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('class', 'csv')">CSV</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-chart-line"></i> Improvement Tracking Report</h5>
+                                <p class="card-text">Generate report showing improvement trends and progress over time.</p>
+                                <button class="btn btn-primary" onclick="generateImprovementReport()">Generate Report</button>
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('improvement', 'pdf')">PDF</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('improvement', 'excel')">Excel</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('improvement', 'csv')">CSV</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-handshake"></i> Mentor Pairing Report</h5>
+                                <p class="card-text">Generate report on mentor-mentee pairings and their effectiveness.</p>
+                                <button class="btn btn-primary" onclick="generatePairingReport()">Generate Report</button>
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('pairing', 'pdf')">PDF</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('pairing', 'excel')">Excel</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('pairing', 'csv')">CSV</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-book-open"></i> Course Recommendation Report</h5>
+                                <p class="card-text">Generate report on course recommendations and their acceptance rates.</p>
+                                <button class="btn btn-primary" onclick="generateRecommendationReport()">Generate Report</button>
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('recommendation', 'pdf')">PDF</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('recommendation', 'excel')">Excel</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('recommendation', 'csv')">CSV</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-download"></i> Export All Data</h5>
+                                <p class="card-text">Export all system data for backup or analysis purposes.</p>
+                                <button class="btn btn-primary" onclick="exportAllData()">Export All Data</button>
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('all', 'excel')">Excel</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="downloadReport('all', 'csv')">CSV</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Report Preview</h5>
+            </div>
+            <div class="card-body">
+                <div id="reportPreview">
+                    <p class="text-muted">Select a report type above to generate a preview.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Function to generate student report
+function generateStudentReport() {
+    const studentId = document.getElementById('studentSelect').value;
+    if (!studentId) {
+        alert('Please select a student first');
+        return;
+    }
+    
+    fetch(`/api/student/${studentId}`)
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <h4>Student Report: ${data.student.name}</h4>
+                <p><strong>Email:</strong> ${data.student.email}</p>
+                <p><strong>Total Attempts:</strong> ${data.scores.length}</p>
+                <p><strong>Average Score:</strong> ${data.scores.length > 0 ? (data.scores.reduce((sum, s) => sum + s.score, 0) / data.scores.length).toFixed(2) : 0}</p>
+                
+                <h5 class="mt-4">Scores by Course:</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th>Score</th>
+                                <th>Max Score</th>
+                                <th>Grade</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.scores.forEach(score => {
+                html += `
+                    <tr>
+                        <td>${score.course_name}</td>
+                        <td>${score.score}</td>
+                        <td>${score.max_score}</td>
+                        <td>${score.grade}</td>
+                        <td>${score.attempt_timestamp}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('reportPreview').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error generating student report:', error);
+            document.getElementById('reportPreview').innerHTML = '<p class="text-danger">Error generating report</p>';
+        });
+}
+
+// Function to generate class report
+function generateClassReport() {
+    fetch('/api/analytics')
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <h4>Class Performance Summary</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Total Students:</strong> ${data.total_students}</p>
+                        <p><strong>Total Courses:</strong> ${data.total_courses}</p>
+                        <p><strong>Total Scores Recorded:</strong> ${data.total_scores}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Average Class Performance:</strong> ${(data.course_performance.reduce((sum, cp) => sum + cp.avg_score, 0) / data.course_performance.length).toFixed(2)}</p>
+                    </div>
+                </div>
+                
+                <h5 class="mt-4">Performance Distribution:</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Performance Level</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            const totalStudents = data.performance_distribution.reduce((sum, pd) => sum + pd.count, 0);
+            
+            data.performance_distribution.forEach(pd => {
+                const percentage = totalStudents > 0 ? ((pd.count / totalStudents) * 100).toFixed(2) : 0;
+                html += `
+                    <tr>
+                        <td>${pd.performance_level}</td>
+                        <td>${pd.count}</td>
+                        <td>${percentage}%</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h5 class="mt-4">Top Performers:</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student Name</th>
+                                <th>Average Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.top_performers.forEach((tp, index) => {
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${tp.name}</td>
+                        <td>${tp.avg_score.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('reportPreview').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error generating class report:', error);
+            document.getElementById('reportPreview').innerHTML = '<p class="text-danger">Error generating report</p>';
+        });
+}
+
+// Function to generate improvement report
+function generateImprovementReport() {
+    fetch('/api/improvement/most-improved')
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <h4>Improvement Tracking Report</h4>
+                <p><strong>Most Improved Students:</strong></p>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student Name</th>
+                                <th>Average Improvement %</th>
+                                <th>Courses Improved</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.most_improved_students.forEach((student, index) => {
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${student.name}</td>
+                        <td>${student.avg_improvement.toFixed(2)}%</td>
+                        <td>${student.courses_improved}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('reportPreview').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error generating improvement report:', error);
+            document.getElementById('reportPreview').innerHTML = '<p class="text-danger">Error generating report</p>';
+        });
+}
+
+// Function to generate pairing report
+function generatePairingReport() {
+    fetch('/api/pairings')  // Assuming we'll create this API endpoint
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <h4>Mentor Pairing Report</h4>
+                <p><strong>Total Pairings:</strong> ${data.pairings.length}</p>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th>Mentee</th>
+                                <th>Mentor</th>
+                                <th>Compatibility Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.pairings.forEach(pairing => {
+                html += `
+                    <tr>
+                        <td>${pairing.course_name}</td>
+                        <td>${pairing.weak_student_name}</td>
+                        <td>${pairing.mentor_name}</td>
+                        <td>${pairing.compatibility_score.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('reportPreview').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error generating pairing report:', error);
+            document.getElementById('reportPreview').innerHTML = '<p class="text-danger">Error generating report</p>';
+        });
+}
+
+// Function to generate recommendation report
+function generateRecommendationReport() {
+    fetch('/api/recommendations')  // Assuming we'll create this API endpoint
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <h4>Course Recommendation Report</h4>
+                <p><strong>Total Recommendations:</strong> ${data.recommendations.length}</p>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Course</th>
+                                <th>Recommendation</th>
+                                <th>Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.recommendations.forEach(rec => {
+                html += `
+                    <tr>
+                        <td>${rec.student_name}</td>
+                        <td>${rec.course_name}</td>
+                        <td>${rec.recommendation}</td>
+                        <td><span class="badge ${
+                            rec.priority === 'High' ? 'badge-danger' : 
+                            rec.priority === 'Medium' ? 'badge-warning' : 'badge-secondary'
+                        }">${rec.priority}</span></td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('reportPreview').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error generating recommendation report:', error);
+            document.getElementById('reportPreview').innerHTML = '<p class="text-danger">Error generating report</p>';
+        });
+}
+
+// Placeholder for export functions
+function exportAllData() {
+    alert('Exporting all data...');
+    // This would typically trigger a download of all data in the requested format
+}
+
+function downloadReport(type, format) {
+    const studentId = document.getElementById('studentSelect').value;
+    
+    // For student reports, we need the student ID
+    if (type === 'student' && !studentId) {
+        alert('Please select a student first');
+        return;
+    }
+    
+    // Construct the download URL
+    let downloadUrl = `/reports/download/${type}?format=${format}`;
+    if (type === 'student') {
+        downloadUrl += `&student_id=${studentId}`;
+    }
+    
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = true;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Add API endpoint for pairings data
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners or initialize components as needed
+});
+</script>
+{% endblock %}

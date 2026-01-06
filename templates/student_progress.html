@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Student Progress - AI-Powered Candidate Performance Analyzer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Student Progress Tracking</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Select Student</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="studentSelect">Choose a student:</label>
+                    <select class="form-control" id="studentSelect">
+                        <option value="">-- Select a student --</option>
+                        {% for student in students %}
+                        <option value="{{ student.student_id }}">{{ student.name }} ({{ student.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="studentProgressSection" class="d-none">
+    <div class="row mt-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h3 id="improvement-percentage">0%</h3>
+                    <p class="card-text">Overall Improvement</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h3 id="courses-completed">0</h3>
+                    <p class="card-text">Courses Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h3 id="courses-improved">0</h3>
+                    <p class="card-text">Courses Improved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h3 id="trend-status">Stable</h3>
+                    <p class="card-text">Performance Trend</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Course Completion Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Status</th>
+                                    <th>Progress</th>
+                                    <th>Est. Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="completion-table">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Improvement Tracking</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Initial Score</th>
+                                    <th>Final Score</th>
+                                    <th>Improvement %</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="improvement-table">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Improvement Visualization</h5>
+                </div>
+                <div class="card-body">
+                    <div id="improvement-chart" style="width:100%; height:400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const studentSelect = document.getElementById('studentSelect');
+    
+    studentSelect.addEventListener('change', function() {
+        const studentId = this.value;
+        if (studentId) {
+            loadStudentProgress(studentId);
+            document.getElementById('studentProgressSection').classList.remove('d-none');
+        } else {
+            document.getElementById('studentProgressSection').classList.add('d-none');
+        }
+    });
+    
+    function loadStudentProgress(studentId) {
+        fetch(`/api/progress/${studentId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update summary stats
+                document.getElementById('improvement-percentage').textContent = data.improvement_data.improvement_percentage.toFixed(1) + '%';
+                document.getElementById('courses-completed').textContent = data.completion_status.filter(c => c.completion_status === 'completed').length;
+                document.getElementById('courses-improved').textContent = data.improvement_data.courses_improved;
+                document.getElementById('trend-status').textContent = data.improvement_data.overall_trend.charAt(0).toUpperCase() + data.improvement_data.overall_trend.slice(1);
+                
+                // Populate completion table
+                const completionTable = document.getElementById('completion-table');
+                completionTable.innerHTML = '';
+                
+                data.completion_status.forEach(status => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${status.course_name}</td>
+                        <td>
+                            <span class="badge ${
+                                status.completion_status === 'completed' ? 'badge-success' : 
+                                status.completion_status === 'in_progress' ? 'badge-warning' : 
+                                'badge-secondary'
+                            }">${status.completion_status.replace('_', ' ').toUpperCase()}</span>
+                        </td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: ${status.completion_percentage}%" 
+                                     aria-valuenow="${status.completion_percentage}" aria-valuemin="0" aria-valuemax="100">
+                                    ${status.completion_percentage}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>${status.estimated_completion_time || 'N/A'}</td>
+                    `;
+                    completionTable.appendChild(row);
+                });
+                
+                // Populate improvement table
+                const improvementTable = document.getElementById('improvement-table');
+                improvementTable.innerHTML = '';
+                
+                data.improvements.forEach(improvement => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${improvement.course_name}</td>
+                        <td>${improvement.initial_score}</td>
+                        <td>${improvement.final_score}</td>
+                        <td>${improvement.improvement_percentage.toFixed(1)}%</td>
+                        <td>${improvement.completion_date ? new Date(improvement.completion_date).toLocaleDateString() : 'N/A'}</td>
+                    `;
+                    improvementTable.appendChild(row);
+                });
+                
+                // Create improvement chart
+                if (data.improvements.length > 0) {
+                    const improvementData = [{
+                        x: data.improvements.map(item => item.course_name),
+                        y: data.improvements.map(item => item.improvement_percentage),
+                        type: 'bar',
+                        name: 'Improvement %',
+                        marker: {
+                            color: data.improvements.map(item => item.improvement_percentage > 0 ? 'green' : 'red')
+                        }
+                    }];
+                    
+                    const improvementLayout = {
+                        title: 'Course Improvement by Percentage',
+                        xaxis: { title: 'Course' },
+                        yaxis: { title: 'Improvement %' },
+                        height: 400
+                    };
+                    
+                    Plotly.newPlot('improvement-chart', improvementData, improvementLayout);
+                }
+            })
+            .catch(error => console.error('Error loading student progress:', error));
+    }
+});
+</script>
+{% endblock %}

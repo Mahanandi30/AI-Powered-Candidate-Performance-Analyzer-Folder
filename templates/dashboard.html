@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI-Powered Candidate Performance Analyzer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h3>{{ total_students }}</h3>
+                <p class="card-text">Total Students</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h3>{{ total_courses }}</h3>
+                <p class="card-text">Total Courses</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h3 id="avg-performance">0%</h3>
+                <p class="card-text">Avg. Performance</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <h3 id="improvement-rate">0%</h3>
+                <p class="card-text">Avg. Improvement</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Performance Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div id="performance-chart" style="width:100%; height:400px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Course-wise Performance</h5>
+            </div>
+            <div class="card-body">
+                <div id="course-performance-chart" style="width:100%; height:400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top Performers</h5>
+            </div>
+            <div class="card-body">
+                <div id="top-performers-chart" style="width:100%; height:400px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Improvement Trends</h5>
+            </div>
+            <div class="card-body">
+                <div id="improvement-trend-chart" style="width:100%; height:400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fetch analytics data and populate charts
+    fetch('/api/analytics')
+        .then(response => response.json())
+        .then(data => {
+            // Performance distribution chart
+            const perfData = [{
+                values: data.performance_distribution.map(item => item.count),
+                labels: data.performance_distribution.map(item => item.performance_level),
+                type: 'pie'
+            }];
+            
+            const perfLayout = {
+                title: 'Performance Distribution',
+                height: 400
+            };
+            
+            Plotly.newPlot('performance-chart', perfData, perfLayout);
+            
+            // Course performance chart
+            const courseData = [{
+                x: data.course_performance.map(item => item.course_name),
+                y: data.course_performance.map(item => item.avg_score),
+                type: 'bar',
+                name: 'Average Score'
+            }];
+            
+            const courseLayout = {
+                title: 'Course-wise Performance',
+                xaxis: { title: 'Course' },
+                yaxis: { title: 'Average Score' },
+                height: 400
+            };
+            
+            Plotly.newPlot('course-performance-chart', courseData, courseLayout);
+            
+            // Top performers chart
+            const topPerfData = [{
+                x: data.top_performers.map(item => item.name),
+                y: data.top_performers.map(item => item.avg_score),
+                type: 'bar',
+                name: 'Average Score'
+            }];
+            
+            const topPerfLayout = {
+                title: 'Top 5 Performers',
+                xaxis: { title: 'Student' },
+                yaxis: { title: 'Average Score' },
+                height: 400
+            };
+            
+            Plotly.newPlot('top-performers-chart', topPerfData, topPerfLayout);
+            
+            // Update stats
+            let avgPerformance = 0;
+            if (data.course_performance.length > 0) {
+                avgPerformance = data.course_performance.reduce((sum, item) => sum + item.avg_score, 0) / data.course_performance.length;
+            }
+            document.getElementById('avg-performance').textContent = avgPerformance.toFixed(1) + '%';
+            
+            // Fetch improvement data for the improvement trends chart
+            fetch('/api/improvement/most-improved')
+                .then(response => response.json())
+                .then(improvementData => {
+                    // Improvement trends chart
+                    const improvementDataChart = [{
+                        x: improvementData.most_improved_students.map(item => item.name),
+                        y: improvementData.most_improved_students.map(item => item.avg_improvement),
+                        type: 'bar',
+                        name: 'Improvement %'
+                    }];
+                    
+                    const improvementLayout = {
+                        title: 'Most Improved Students',
+                        xaxis: { title: 'Student' },
+                        yaxis: { title: 'Average Improvement %' },
+                        height: 400
+                    };
+                    
+                    Plotly.newPlot('improvement-trend-chart', improvementDataChart, improvementLayout);
+                    
+                    // Calculate and display overall improvement rate
+                    if (improvementData.most_improved_students.length > 0) {
+                        const overallImprovement = improvementData.most_improved_students.reduce((sum, item) => sum + item.avg_improvement, 0) / improvementData.most_improved_students.length;
+                        document.getElementById('improvement-rate').textContent = overallImprovement.toFixed(1) + '%';
+                    }
+                })
+                .catch(error => console.error('Error fetching improvement data:', error));
+        })
+        .catch(error => console.error('Error fetching analytics:', error));
+</script>
+{% endblock %}
